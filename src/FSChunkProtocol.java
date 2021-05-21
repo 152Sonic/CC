@@ -11,35 +11,39 @@ public class FSChunkProtocol{
 
 
 
-    public static void sendToGw(DatagramSocket ds, String msg, int porta, InetAddress ip){
-        DatagramPacket p = null;
+    public static void sendToGw(DatagramSocket ds, DatagramPacket dp, InetAddress ip, int port){
         try{
-            byte[] data = msg.getBytes();
-            p = new DatagramPacket(data, data.length,ip,porta);
-            ds.send(p);
+            //ds.connect(ip, port);;
+            System.out.println(dp.getPort());
+            ds.send(dp);
+            //System.out.println("Fds");
         }  catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(p.getPort());
+        //System.out.println(p.getPort());
     }
 
-    public static DatagramPacket receiveFromServers(DatagramSocket ds){
-        byte [] buf = new byte [256];
-        DatagramPacket p = new DatagramPacket(buf, 256);;
+    public static Packet receiveFromServers(DatagramSocket ds){
+        byte [] buf = new byte [1024];
+        DatagramPacket p = new DatagramPacket(buf, buf.length);
         try {
             ds.receive(p);
+            System.out.println("Recebi");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        int porta = p.getPort();
-        InetAddress ip = p.getAddress();
-        DatagramPacket packet = new DatagramPacket(buf, 256, ip, porta);
+        System.out.println("Estou aqui: " + p.getPort());
+        System.out.println("IP: " + p.getAddress());
+        Packet pckt = null;
+        try {
+            pckt = new Packet(buf);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         //System.out.println("Ds-porta: " + ds.getPort());
         //p.setPort(ds.getPort());
         //p.setAddress(ds.getInetAddress());
-
-        System.out.println("Pacote-porta: " + packet.getPort());
-        return packet;
+        return pckt;
     }
 
     public static void sendToServers(DatagramSocket ds, String msg, int porta, InetAddress ip){

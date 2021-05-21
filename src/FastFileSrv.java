@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -29,7 +30,17 @@ public class FastFileSrv{
     public void runServer (){
         while(true){
             new Thread(() -> {
-                FSChunkProtocol.sendToGw(ds_envio,"Entao",4200,ip);
+                String s = "Ola";
+                byte [] msg = s.getBytes();
+                Packet p = new Packet(1, 85, porta, 0, msg, 1, 1, "123");
+                DatagramPacket dp;
+                try {
+                    dp = new DatagramPacket(p.toBytes(), p.toBytes().length,ip,4200);
+                    System.out.println("Cheguei!");
+                    FSChunkProtocol.sendToGw(ds_envio,dp,ip,4200);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }).start();
             new Thread(() -> {
                 DatagramPacket p = FSChunkProtocol.receiveFromGw(ds_rececao);

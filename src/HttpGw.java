@@ -33,13 +33,12 @@ public class HttpGw {
     public void runGW (){
         while (true){
             new Thread(() -> {
-                DatagramPacket p = FSChunkProtocol.receiveFromServers(ds_rececao);
-                System.out.println(p.getData());
-                servers.put(p.getAddress(), p.getPort());
-                System.out.println("PORTA: " + p.getPort());
+                Packet p = FSChunkProtocol.receiveFromServers(ds_rececao);
+                System.out.println("Cheguei, vim da porta: " + p.getPorta());
+                System.out.println(p.toString());
             }).start();
             new Thread(() -> {
-                FSChunkProtocol.sendToServers(ds_envio,"Xau",4300,ip);
+                //FSChunkProtocol.sendToServers(ds_envio,"Xau",4300,ip);
             }).start();
         }
     }
