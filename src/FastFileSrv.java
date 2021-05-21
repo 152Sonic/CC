@@ -27,31 +27,38 @@ public class FastFileSrv{
         this.l = new ReentrantLock();
     }
 
-    public void runServer (){
-        while(true){
-            new Thread(() -> {
-                String s = "Ola";
-                byte [] msg = s.getBytes();
-                Packet p = new Packet(1, 85, porta, 0, msg, 1, 1, "123");
-                DatagramPacket dp;
-                try {
-                    dp = new DatagramPacket(p.toBytes(), p.toBytes().length,ip,4200);
-                    System.out.println("Cheguei!");
-                    FSChunkProtocol.sendToGw(ds_envio,dp,ip,4200);
-                } catch (IOException e) {
-                    e.printStackTrace();
+    public void runServer () throws IOException{
+        String s = "Ola ta tudo top";
+        byte [] msg = s.getBytes();
+
+        //estabelecer ligaçao
+        Packet p1 = new Packet(1, 1, porta, 0, msg, 0, 0, "pdf");
+        DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, ip, 4200);
+        FSChunkProtocol.sendToGw(ds_envio, dp1);
+
+        new Thread(() -> {
+            while(true){
+                Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
+                // gerir o pacote
+                if (p.getTipo() == 2){
+                    //Packet p4 = pacote com o ficheiro
+                    //DatagramPacket dp4 = new DatagramPacket(p4.toBytes(), p4.toBytes().length, ip, 4200);
+                    //FSChunkProtocol.sendToGw(ds_envio, dp4);
                 }
-            }).start();
-            new Thread(() -> {
-                DatagramPacket p = FSChunkProtocol.receiveFromGw(ds_rececao);
-                System.out.println(p.getData());
-            }).start();
+                else if (p.getTipo() == 5){
+                    //ds_envio.close()
+                }
+            }
+        }).start();
             
-        }
+        
     }
 
-    public static void main(String [] args){
-        FastFileSrv s = new FastFileSrv(4300);
+
+
+
+    public static void main(String [] args) throws IOException{
+        FastFileSrv s = new FastFileSrv(Integer.parseInt(args[0]));
         s.runServer();
     }
 }

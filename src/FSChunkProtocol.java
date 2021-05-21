@@ -11,19 +11,15 @@ public class FSChunkProtocol{
 
 
 
-    public static void sendToGw(DatagramSocket ds, DatagramPacket dp, InetAddress ip, int port){
+    public static void sendToGw(DatagramSocket ds, DatagramPacket dp){
         try{
-            //ds.connect(ip, port);;
-            System.out.println(dp.getPort());
             ds.send(dp);
-            //System.out.println("Fds");
         }  catch (Exception e) {
             e.printStackTrace();
         }
-        //System.out.println(p.getPort());
     }
 
-    public static Packet receiveFromServers(DatagramSocket ds){
+    public static Packet receiveFromServer(DatagramSocket ds){
         byte [] buf = new byte [1024];
         DatagramPacket p = new DatagramPacket(buf, buf.length);
         try {
@@ -32,7 +28,6 @@ public class FSChunkProtocol{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Estou aqui: " + p.getPort());
         System.out.println("IP: " + p.getAddress());
         Packet pckt = null;
         try {
@@ -59,20 +54,21 @@ public class FSChunkProtocol{
 
     }
 
-    public static DatagramPacket receiveFromGw(DatagramSocket ds){
-        byte [] buf = new byte [256];
-        int length=256;
-        int porta = 0;
-        DatagramPacket p = null;
-        InetAddress ip;
+    public static Packet receiveFromGw(DatagramSocket ds){
+        byte [] buf = new byte [1024];
+        DatagramPacket p = new DatagramPacket(buf,buf.length);
         try {
-            ip = InetAddress.getLocalHost();
-            p = new DatagramPacket(buf, length,ip,porta);
             ds.receive(p);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return p;
+        Packet pckt = null;
+        try {
+            pckt = new Packet(buf);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return pckt;
 
     }
 

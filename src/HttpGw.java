@@ -10,7 +10,7 @@ import java.util.Map;
 public class HttpGw {
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
-    private Map<InetAddress,Integer> servers;
+    private Map<Integer,Packet> packets;
     private int porta;
     private InetAddress ip;
 
@@ -27,23 +27,50 @@ public class HttpGw {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.servers = new HashMap<>();
+        this.packets = new HashMap<>();
     }
 
-    public void runGW (){
-        while (true){
-            new Thread(() -> {
-                Packet p = FSChunkProtocol.receiveFromServers(ds_rececao);
-                System.out.println("Cheguei, vim da porta: " + p.getPorta());
-                System.out.println(p.toString());
-            }).start();
-            new Thread(() -> {
-                //FSChunkProtocol.sendToServers(ds_envio,"Xau",4300,ip);
-            }).start();
+    public void addPacket(Packet p){
+        packets.put(p.getPorta(), p);
+    }
+
+    /*
+    public void gerirPedido(Pedido ped){
+        for (Packet p : packets.values()) {
+            if (p.getFileName() == ped.getFileName()){
+                if(p.getTipo() == 1){
+                    Packet p2 = new Packet(6, 2, porta, 0, "aceito", 0, 0, "pdf");
+                    DatagramPacket dp2 = new DatagramPacket(p2.toBytes(), p2.toBytes().length, p.getIP(), p.getPorta());
+                    FSChunkProtocol.sendToGw(ds_envio, dp2);
+                    break; -> este break acontece se nao tivermos em conta a possibilidade haver frgamentações
+                }
+                else if(p.getTipo() == 4){
+                    Ja temos o ficheiro para mandar para o cliente
+                }
+            }
         }
     }
+    */
 
-    public static void main (String [] args){
+    public void runGW () throws UnknownHostException{
+        new Thread(() -> {
+            while (true){
+                Packet p = FSChunkProtocol.receiveFromServer(ds_rececao);
+                System.out.println("Cheguei, vim da porta: " + p.getPorta());
+                addPacket(p);
+            }
+        }).start();
+
+        while(true){
+            //for pedido in pedidos:
+                //new Thread(() -> {
+                    //gerirPedido(pedido);
+                //}).start();
+        }
+
+    }
+
+    public static void main (String [] args) throws UnknownHostException{
         HttpGw gw = new HttpGw(4200);
         gw.runGW();
     }

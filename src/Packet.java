@@ -86,6 +86,10 @@ public class Packet implements Serializable{
 		return bb.array();
 	}
 
+	int getTipo(){
+		return this.tipo;
+	}
+	
     int getPorta(){
         return this.porta_origem;
     }
