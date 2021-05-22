@@ -5,12 +5,25 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+class Server{
+    private int porta;
+    private InetAddress ip;
+    private int estado; //0 -> livre; 1 -> ocupado
+
+    public Server (int porta, InetAddress ip, int estado){
+        this.porta = porta;
+        this.ip = ip;
+        this.estado = estado;
+    }
+}
 
 public class HttpGw {
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
-    private Map<Integer,Packet> packets;
+    private List<Server> servers;
     private int porta;
     private InetAddress ip;
 
@@ -27,11 +40,12 @@ public class HttpGw {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.packets = new HashMap<>();
+        this.servers = new ArrayList<Server>();
     }
 
-    public void addPacket(Packet p){
-        packets.put(p.getPorta(), p);
+    public void addServer(int porta, InetAddress ip){
+        Server s = new Server(porta,ip,0);
+        servers.add(s);
     }
 
     /*
@@ -52,12 +66,21 @@ public class HttpGw {
     }
     */
 
+    public void gerirPacket(Packet p) throws UnknownHostException{
+        if (p.getTipo() == 1) addServer(p.getPorta(), p.getIP());
+        else if (p.getTipo() == 3);
+    }
+
     public void runGW () throws UnknownHostException{
         new Thread(() -> {
             while (true){
                 Packet p = FSChunkProtocol.receiveFromServer(ds_rececao);
                 System.out.println("Cheguei, vim da porta: " + p.getPorta());
-                addPacket(p);
+                try {
+                    gerirPacket(p);
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
             }
         }).start();
 

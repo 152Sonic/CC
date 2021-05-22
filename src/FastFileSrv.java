@@ -13,6 +13,7 @@ public class FastFileSrv{
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
     private int porta;
+    private byte[] file;
 
 
     public FastFileSrv (int porta){
@@ -27,12 +28,13 @@ public class FastFileSrv{
         this.l = new ReentrantLock();
     }
 
+
     public void runServer () throws IOException{
         String s = "Ola ta tudo top";
         byte [] msg = s.getBytes();
 
         //estabelecer ligaçao
-        Packet p1 = new Packet(1, 1, porta, 0, msg, 0, 0, "pdf");
+        Packet p1 = new Packet(1, porta, ip.getHostAddress(), 0, msg, 0, 0, "");
         DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, ip, 4200);
         FSChunkProtocol.sendToGw(ds_envio, dp1);
 
@@ -41,11 +43,9 @@ public class FastFileSrv{
                 Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
                 // gerir o pacote
                 if (p.getTipo() == 2){
-                    //Packet p4 = pacote com o ficheiro
-                    //DatagramPacket dp4 = new DatagramPacket(p4.toBytes(), p4.toBytes().length, ip, 4200);
-                    //FSChunkProtocol.sendToGw(ds_envio, dp4);
+                    //pede o fivheiro
                 }
-                else if (p.getTipo() == 5){
+                else if (p.getTipo() == 4){
                     //ds_envio.close()
                 }
             }
