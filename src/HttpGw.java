@@ -1,8 +1,5 @@
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,11 +15,26 @@ class Server{
         this.ip = ip;
         this.estado = estado;
     }
+
+    public int getEstado(){
+        return this.estado;
+    }
+
+    public int getPorta() {
+        return porta;
+    }
+
+    public InetAddress getIp() {
+        return ip;
+    }
 }
 
 public class HttpGw {
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
+    private ServerSocket ss;
+    private DataInputStream dis;
+    private DataOutputStream dos;
     private List<Server> servers;
     private int porta;
     private InetAddress ip;
@@ -37,9 +49,11 @@ public class HttpGw {
         try {
             this.ds_envio = new DatagramSocket();
             this.ds_rececao = new DatagramSocket(this.porta);
+            this.ss = new ServerSocket(this.porta);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         this.servers = new ArrayList<Server>();
     }
 
@@ -48,23 +62,22 @@ public class HttpGw {
         servers.add(s);
     }
 
-    /*
-    public void gerirPedido(Pedido ped){
-        for (Packet p : packets.values()) {
-            if (p.getFileName() == ped.getFileName()){
-                if(p.getTipo() == 1){
-                    Packet p2 = new Packet(6, 2, porta, 0, "aceito", 0, 0, "pdf");
-                    DatagramPacket dp2 = new DatagramPacket(p2.toBytes(), p2.toBytes().length, p.getIP(), p.getPorta());
-                    FSChunkProtocol.sendToGw(ds_envio, dp2);
-                    break; -> este break acontece se nao tivermos em conta a possibilidade haver frgamentações
-                }
-                else if(p.getTipo() == 4){
-                    Ja temos o ficheiro para mandar para o cliente
-                }
+
+    public void gerirPedido(String ped) throws IOException {
+        System.out.println("ola");
+        String pedido = "pedido";
+        byte[] pedido_buffer = pedido.getBytes();
+        Packet pacote = new Packet(2,4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0,ped);
+        for(Server s : servers){
+            if(s.getEstado()==0) {
+                DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getIp(),s.getPorta());
+                ds_envio.send(dp);
+                break;
             }
         }
+
     }
-    */
+
 
     public void gerirPacket(Packet p) throws UnknownHostException{
         if (p.getTipo() == 1) addServer(p.getPorta(), p.getIP());
@@ -75,7 +88,7 @@ public class HttpGw {
         new Thread(() -> {
             while (true){
                 Packet p = FSChunkProtocol.receiveFromServer(ds_rececao);
-                System.out.println("Cheguei, vim da porta: " + p.getPorta());
+                System.out.println("Cheguei, vim da porta: " + p.toString());
                 try {
                     gerirPacket(p);
                 } catch (UnknownHostException e) {
@@ -84,12 +97,23 @@ public class HttpGw {
             }
         }).start();
 
-        while(true){
-            //for pedido in pedidos:
-                //new Thread(() -> {
-                    //gerirPedido(pedido);
-                //}).start();
-        }
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Socket s = ss.accept();
+                    dis = new DataInputStream(new BufferedInputStream(s.getInputStream()));
+                    dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
+                    String p = dis.readLine();
+                    String[] tokens = p.split(" ");
+                    p = tokens[1].substring(1);
+                    System.out.println(p);
+                    gerirPedido(p);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
 
     }
 

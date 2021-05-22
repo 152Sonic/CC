@@ -34,13 +34,14 @@ public class FastFileSrv{
         byte [] msg = s.getBytes();
 
         //estabelecer ligaçao
-        Packet p1 = new Packet(1, porta, ip.getHostAddress(), 0, msg, 0, 0, "");
+        Packet p1 = new Packet(1, porta, ip.getHostAddress(), 0, msg, 0, 0, "38955");
         DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, ip, 4200);
         FSChunkProtocol.sendToGw(ds_envio, dp1);
 
         new Thread(() -> {
             while(true){
                 Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
+                System.out.println(p.toString());
                 // gerir o pacote
                 if (p.getTipo() == 2){
                     //pede o fivheiro
