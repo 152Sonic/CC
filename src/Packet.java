@@ -14,15 +14,13 @@ public class Packet implements Serializable{
     private int frag; //0 false, 1 true
     private int checksum;
     private int offset;
-    private String ficheiro;
 
-    public Packet(int tipo, int porta_origem, String ip, int frag, byte [] dados, int checksum, int offset, String ficheiro){
+    public Packet(int tipo, int porta_origem, String ip, int frag, byte [] dados, int checksum, int offset){
         this.tipo = tipo;
         this.id = ip + "-" + porta_origem;
         this.frag = frag;
         this.data = dados;
         this.checksum = checksum;
-        this.ficheiro = ficheiro;
         this.offset = offset;
     }
 
@@ -39,12 +37,10 @@ public class Packet implements Serializable{
 		this.tipo = ByteBuffer.wrap(array,0,4).getInt();
 		this.offset = ByteBuffer.wrap(array,12,4).getInt();
         this.frag = ByteBuffer.wrap(array,16,4).getInt();
-		Charset charset = StandardCharsets.US_ASCII;
-        this.ficheiro = charset.decode(ByteBuffer.wrap(array,20,32)).toString();
-        this.checksum = ByteBuffer.wrap(array,24,4).getInt();
+        this.checksum = ByteBuffer.wrap(array,20,4).getInt();
 
-		byte [] data = new byte[array.length-28];
-		System.arraycopy(array,24,data,0,array.length-28);
+		byte [] data = new byte[array.length-24];
+		System.arraycopy(array,24,data,0,array.length-24);
 		this.data = data;
 	}
 
@@ -63,8 +59,7 @@ public class Packet implements Serializable{
         byte[] frag_buffer = intToBytes(this.frag);
         byte[] checksum_buffer = intToBytes(this.checksum);
         byte[] offset_buffer = intToBytes(this.offset);
-        byte[] ficheiro_buffer = this.ficheiro.getBytes();
-		byte [] buffer = new byte[4*6 + 32 + this.data.length];
+		byte [] buffer = new byte[4*6 + this.data.length];
 
 
 		System.arraycopy(tipo_buffer,0,buffer,0,4);
@@ -72,9 +67,8 @@ public class Packet implements Serializable{
 		System.arraycopy(ip_origem_buffer,0,buffer,8,4);
 		System.arraycopy(offset_buffer,0,buffer,12,4);
 		System.arraycopy(frag_buffer,0,buffer,16,4);
-		System.arraycopy(ficheiro_buffer,0,buffer,20,32);
-		System.arraycopy(checksum_buffer,0,buffer,52,4);
-		System.arraycopy(data,0,buffer,56,data.length);
+		System.arraycopy(checksum_buffer,0,buffer,20 ,4);
+		System.arraycopy(data,0,buffer,24 ,data.length);
 
 		return buffer;
 	}
@@ -104,7 +98,10 @@ public class Packet implements Serializable{
 
 		s.append("ID: ");
 		s.append(this.id + "\n");
-		s.append("File Name:" + this.ficheiro);
+		Charset charset = StandardCharsets.US_ASCII;
+		String string = charset.decode(ByteBuffer.wrap(data))
+				.toString();
+		s.append(string);
 		return s.toString();
 	}
 

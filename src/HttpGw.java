@@ -65,9 +65,8 @@ public class HttpGw {
 
     public void gerirPedido(String ped) throws IOException {
         System.out.println("ola");
-        String pedido = "pedido";
-        byte[] pedido_buffer = pedido.getBytes();
-        Packet pacote = new Packet(2,4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0,ped);
+        byte[] pedido_buffer = ped.getBytes();
+        Packet pacote = new Packet(2,4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0);
         for(Server s : servers){
             if(s.getEstado()==0) {
                 DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getIp(),s.getPorta());
