@@ -88,9 +88,9 @@ public class Packet implements Serializable{
         return (Integer.parseInt(aux[1]));
     }
 
-	InetAddress getIP() throws UnknownHostException{
+	String getIP(){
 		String [] aux = this.id.split("-");
-        return (InetAddress.getByName(aux[0]));
+        return aux[0];
 	}
     
     public String toString(){

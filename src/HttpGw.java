@@ -1,16 +1,17 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 class Server{
     private int porta;
-    private InetAddress ip;
+    private String ip;
     private int estado; //0 -> livre; 1 -> ocupado
 
-    public Server (int porta, InetAddress ip, int estado){
+    public Server (int porta, String ip, int estado){
         this.porta = porta;
         this.ip = ip;
         this.estado = estado;
@@ -21,11 +22,15 @@ class Server{
     }
 
     public int getPorta() {
-        return porta;
+        return this.porta;
     }
 
-    public InetAddress getIp() {
-        return ip;
+    public String getIp() {
+        return this.ip;
+    }
+
+    public InetAddress getInetAddress() throws UnknownHostException{
+        return InetAddress.getByName(this.ip);
     }
 }
 
@@ -57,7 +62,7 @@ public class HttpGw {
         this.servers = new ArrayList<Server>();
     }
 
-    public void addServer(int porta, InetAddress ip){
+    public void addServer(int porta, String ip){
         Server s = new Server(porta,ip,0);
         servers.add(s);
     }
@@ -67,10 +72,11 @@ public class HttpGw {
         System.out.println("ola");
         byte[] pedido_buffer = ped.getBytes();
         Packet pacote = new Packet(2,4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0);
+        System.out.println(servers);
         for(Server s : servers){
             if(s.getEstado()==0) {
-                DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getIp(),s.getPorta());
-		system.out.println(s.getIp().getHostAddress());
+                System.out.print("vou mandar para: " + s.getInetAddress() + "   " + s.getPorta());
+                DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getInetAddress(),s.getPorta());
                 ds_envio.send(dp);
                 break;
             }
@@ -80,6 +86,7 @@ public class HttpGw {
 
 
     public void gerirPacket(Packet p) throws UnknownHostException{
+        System.out.println("server->porta: " + p.getPorta() + ", ip: " + p.getIP());
         if (p.getTipo() == 1) addServer(p.getPorta(), p.getIP());
         else if (p.getTipo() == 3);
     }
@@ -88,7 +95,7 @@ public class HttpGw {
         new Thread(() -> {
             while (true){
                 Packet p = FSChunkProtocol.receiveFromServer(ds_rececao);
-                System.out.println("Cheguei, vim da porta: " + p.toString());
+                System.out.println("pacote recebido: " + p.toString());
                 try {
                     gerirPacket(p);
                 } catch (UnknownHostException e) {

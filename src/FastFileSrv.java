@@ -8,7 +8,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class FastFileSrv{
-    private InetAddress ip;
+    private String ip;
     private Lock l;
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
@@ -16,11 +16,11 @@ public class FastFileSrv{
     private byte[] file;
 
 
-    public FastFileSrv (int porta, InetAddress ip){
+    public FastFileSrv (int porta, String ip){
         this.porta = porta; //porta é indicada no terminal mas agora esta assim
         try {
             this.ds_envio = new DatagramSocket();
-            this.ds_rececao = new DatagramSocket(this.porta);
+            this.ds_rececao = new DatagramSocket(this.porta, InetAddress.getByName(ip));
             this.ip = ip;
         } catch (Exception e) {
             e.printStackTrace();
@@ -34,13 +34,15 @@ public class FastFileSrv{
         byte [] msg = s.getBytes();
 
         //estabelecer ligaçao
-        Packet p1 = new Packet(1, porta, ip.getHostAddress(), 0, msg, 0, 0);
-        DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, ip, 4200);
+        System.out.println(ip);
+        Packet p1 = new Packet(1, porta, ip, 0, msg, 0, 0);
+        DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, InetAddress.getLocalHost(), 4200);
         FSChunkProtocol.sendToGw(ds_envio, dp1);
 
         new Thread(() -> {
             while(true){
                 Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
+                System.out.println("recebido");
                 System.out.println(p.toString());
                 // gerir o pacote
                 if (p.getTipo() == 2){
@@ -59,7 +61,10 @@ public class FastFileSrv{
 
 
     public static void main(String [] args) throws IOException{
-        FastFileSrv s = new FastFileSrv(Integer.parseInt(args[0]), InetAddress.getByName(args[1]));
+        System.out.println(args[1]);
+        
+        
+        FastFileSrv s = new FastFileSrv(Integer.parseInt(args[0]), args[1]);
 
         s.runServer();
     }

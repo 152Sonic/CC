@@ -24,11 +24,9 @@ public class FSChunkProtocol{
         DatagramPacket p = new DatagramPacket(buf, buf.length);
         try {
             ds.receive(p);
-            System.out.println("Recebi");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("IP: " + p.getAddress());
         Packet pckt = null;
         try {
             pckt = new Packet(buf);
@@ -59,6 +57,8 @@ public class FSChunkProtocol{
         DatagramPacket p = new DatagramPacket(buf,buf.length);
         try {
             ds.receive(p);
+            System.out.println("recebido");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
