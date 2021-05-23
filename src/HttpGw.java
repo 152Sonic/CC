@@ -70,6 +70,7 @@ public class HttpGw {
         for(Server s : servers){
             if(s.getEstado()==0) {
                 DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getIp(),s.getPorta());
+		system.out.println(s.getIp().getHostAddress());
                 ds_envio.send(dp);
                 break;
             }
