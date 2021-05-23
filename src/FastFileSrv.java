@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class FastFileSrv{
     private String ip;
+    private String ip_destino;
     private Lock l;
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
@@ -16,12 +17,13 @@ public class FastFileSrv{
     private byte[] file;
 
 
-    public FastFileSrv (int porta, String i) {
+    public FastFileSrv (int porta, String ipd) {
         this.porta = porta; //porta é indicada no terminal mas agora esta assim
         try {
             this.ds_envio = new DatagramSocket();
-            this.ds_rececao = new DatagramSocket(this.porta, InetAddress.getByName(i));
+            this.ds_rececao = new DatagramSocket(this.porta);
             this.ip = InetAddress.getLocalHost().getHostAddress();
+            this.ip_destino = ipd;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -36,7 +38,7 @@ public class FastFileSrv{
         //estabelecer ligaçao
         System.out.println(ip);
         Packet p1 = new Packet(1, porta, ip, 0, msg, 0, 0);
-        DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, InetAddress.getLocalHost(), 4200);
+        DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, InetAddress.getByName(ip_destino), 4200);
         FSChunkProtocol.sendToGw(ds_envio, dp1);
 
         new Thread(() -> {
@@ -59,10 +61,7 @@ public class FastFileSrv{
 
     public static void main(String [] args) throws IOException{
         System.out.println(args[1]);
-        
-        
-        FastFileSrv s = new FastFileSrv(Integer.parseInt(args[0]), args[1]);
-
+        FastFileSrv s = new FastFileSrv(Integer.parseInt(args[0]),args[1]);
         s.runServer();
     }
 }
