@@ -16,12 +16,12 @@ public class FastFileSrv{
     private byte[] file;
 
 
-    public FastFileSrv (int porta, String ip){
+    public FastFileSrv (int porta, String i) {
         this.porta = porta; //porta é indicada no terminal mas agora esta assim
         try {
             this.ds_envio = new DatagramSocket();
-            this.ds_rececao = new DatagramSocket(this.porta, InetAddress.getByName(ip));
-            this.ip = ip;
+            this.ds_rececao = new DatagramSocket(this.porta, InetAddress.getByName(i));
+            this.ip = InetAddress.getLocalHost().getHostAddress();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -32,7 +32,7 @@ public class FastFileSrv{
     public void runServer () throws IOException{
         String s = "Ola ta tudo top";
         byte [] msg = s.getBytes();
-
+        System.out.println(s);
         //estabelecer ligaçao
         System.out.println(ip);
         Packet p1 = new Packet(1, porta, ip, 0, msg, 0, 0);
@@ -56,9 +56,6 @@ public class FastFileSrv{
             
         
     }
-
-
-
 
     public static void main(String [] args) throws IOException{
         System.out.println(args[1]);
