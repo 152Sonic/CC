@@ -63,7 +63,7 @@ public class Packet implements Serializable{
 		byte[] frag_buffer = intToBytes(this.frag);
 		byte[] checksum_buffer = intToBytes(this.checksum);
 		byte[] offset_buffer = intToBytes(this.offset);
-		byte [] buffer = new byte[4*6 + this.data.length];
+		byte [] buffer = new byte[4*7 + this.data.length];
 
 		System.arraycopy(id_buffer,0,buffer,0,4);
 		System.arraycopy(tipo_buffer,0,buffer,4,4);
