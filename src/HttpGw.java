@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,8 +39,6 @@ public class HttpGw {
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
     private ServerSocket ss;
-    private DataInputStream dis;
-    private DataOutputStream dos;
     private List<Server> servers;
     private int porta;
     private InetAddress ip;
@@ -70,11 +69,11 @@ public class HttpGw {
     }
 
 
-    public void gerirPedido(String ped, Socket s) throws IOException {
+    public void gerirPedido(String ped, Socket sckt) throws IOException {
         System.out.println("ola");
         byte[] pedido_buffer = ped.getBytes();
         Packet pacote = new Packet(2,clientes.size(),4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0);
-	clientes.put(clientes.size(),s);
+	clientes.put(clientes.size(),sckt);
         System.out.println(servers);
         for(Server s : servers){
             if(s.getEstado()==0) {
@@ -88,12 +87,17 @@ public class HttpGw {
     }
 
 
-    public void gerirPacket(Packet p) throws UnknownHostException{
+    public void gerirPacket(Packet p) throws IOException {
         System.out.println("server->porta: " + p.getPorta() + ", ip: " + p.getIP());
         if (p.getTipo() == 1) addServer(p.getPorta(), p.getIP());
         else if (p.getTipo() == 3){
+            byte[] file = p.getData();
+            Socket s = clientes.get(p.getId());
+            DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
+            String fileout = new String(file, StandardCharsets.UTF_8);
+            dos.writeUTF(fileout);
 		
-	}
+	    }
     }
 
     public void runGW () throws UnknownHostException{
@@ -103,7 +107,7 @@ public class HttpGw {
                 System.out.println("pacote recebido: " + p.toString());
                 try {
                     gerirPacket(p);
-                } catch (UnknownHostException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -113,8 +117,7 @@ public class HttpGw {
             while (true) {
                 try {
                     Socket s = ss.accept();
-                    dis = new DataInputStream(new BufferedInputStream(s.getInputStream()));
-                    dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
+                    DataInputStream dis = new DataInputStream(new BufferedInputStream(s.getInputStream()));
                     String p = dis.readLine();
                     String[] tokens = p.split(" ");
                     p = tokens[1].substring(1);

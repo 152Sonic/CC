@@ -1,11 +1,16 @@
+import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class FastFileSrv{
     private String ip;
@@ -37,7 +42,7 @@ public class FastFileSrv{
         System.out.println(s);
         //estabelecer ligaçao
         System.out.println(ip);
-        Packet p1 = new Packet(1, porta, ip, 0, msg, 0, 0);
+        Packet p1 = new Packet(1, -1,porta, ip, 0, msg, 0, 0);
         DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, InetAddress.getByName(ip_destino), 4200);
         FSChunkProtocol.sendToGw(ds_envio, dp1);
 
@@ -48,13 +53,19 @@ public class FastFileSrv{
                 System.out.println(p.toString());
                 // gerir o pacote
                 if (p.getTipo() == 2){
+                    Charset charset = StandardCharsets.US_ASCII;
                     String filename = charset.decode(ByteBuffer.wrap(p.getData()))
 				.toString();
 		    File file = new File("../../" + filename);
-		    byte[] fileContent = Files.readAllBytes(file.toPath());
-  		    p = new Packet(3,porta,ip,0,filecontent,0,0);
-		    DatagramPacket p1 = new DatagramPacket(p.toBytes(), p.toBytes().lenght, InetAddress.getByName(ip_destino),4200);
-		    FSChunkProtocol.sendToGw(ds_envio.p1);
+                    byte[] filecontent = new byte[0];
+                    try {
+                        filecontent = Files.readAllBytes(file.toPath());
+                        p = new Packet(3,p.getId(),porta,ip,0,filecontent,0,0);
+                        DatagramPacket pac = new DatagramPacket(p.toBytes(), p.toBytes().length, InetAddress.getByName(ip_destino),4200);
+                        FSChunkProtocol.sendToGw(ds_envio,pac);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 else if (p.getTipo() == 4){
                     //ds_envio.close()

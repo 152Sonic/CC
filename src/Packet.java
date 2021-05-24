@@ -16,18 +16,9 @@ public class Packet implements Serializable{
     private int checksum;
     private int offset;
 
-    public Packet(int tipo, int porta_origem, String ip, int frag, byte [] dados, int checksum, int offset){
-        this.tipo = tipo;
-        this.ip = ip + "-" + porta_origem;
-        this.frag = frag;
-        this.data = dados;
-        this.checksum = checksum;
-        this.offset = offset;
-    }
-
     public Packet(int tipo,int id, int porta_origem, String ip, int frag, byte [] dados, int checksum, int offset){
         this.tipo = tipo;
-	this.id = id;
+		this.id = id;
         this.ip = ip + "-" + porta_origem;
         this.frag = frag;
         this.data = dados;
@@ -39,19 +30,20 @@ public class Packet implements Serializable{
 		String key;
 
 		byte [] b = new byte[4];
-		System.arraycopy(array,8,b,0,4);
+		System.arraycopy(array,12,b,0,4);
 		key = InetAddress.getByAddress(b).getHostAddress();
 
-		key += "-" + ByteBuffer.wrap(array,4,4).getInt();
+		key += "-" + ByteBuffer.wrap(array,8,4).getInt();
 
 		this.ip = key;
-		this.tipo = ByteBuffer.wrap(array,0,4).getInt();
-		this.offset = ByteBuffer.wrap(array,12,4).getInt();
-        	this.frag = ByteBuffer.wrap(array,16,4).getInt();
-        	this.checksum = ByteBuffer.wrap(array,20,4).getInt();
+		this.id = ByteBuffer.wrap(array,0,4).getInt();
+		this.tipo = ByteBuffer.wrap(array,4,4).getInt();
+		this.offset = ByteBuffer.wrap(array,16,4).getInt();
+		this.frag = ByteBuffer.wrap(array,20,4).getInt();
+		this.checksum = ByteBuffer.wrap(array,24,4).getInt();
 
-		byte [] data = new byte[array.length-24];
-		System.arraycopy(array,24,data,0,array.length-24);
+		byte [] data = new byte[array.length-28];
+		System.arraycopy(array,28,data,0,array.length-28);
 		this.data = data;
 	}
 
@@ -66,11 +58,11 @@ public class Packet implements Serializable{
 		//byte[] chunk = intToBytes(this.chunk); //4
 		byte[] id_buffer = intToBytes(this.id);
 		byte[] tipo_buffer = intToBytes(this.tipo); //4
-        	byte[] porta_origem_buffer = intToBytes(Integer.parseInt(aux[1]));
+		byte[] porta_origem_buffer = intToBytes(Integer.parseInt(aux[1]));
 		byte[] ip_origem_buffer = InetAddress.getByName(aux[0]).getAddress();
-        	byte[] frag_buffer = intToBytes(this.frag);
-        	byte[] checksum_buffer = intToBytes(this.checksum);
-        	byte[] offset_buffer = intToBytes(this.offset);
+		byte[] frag_buffer = intToBytes(this.frag);
+		byte[] checksum_buffer = intToBytes(this.checksum);
+		byte[] offset_buffer = intToBytes(this.offset);
 		byte [] buffer = new byte[4*6 + this.data.length];
 
 		System.arraycopy(id_buffer,0,buffer,0,4);
@@ -91,12 +83,16 @@ public class Packet implements Serializable{
 		return bb.array();
 	}
 
+	public int getId() {
+		return id;
+	}
+
 	int getTipo(){
 		return this.tipo;
 	}
 	
     int getPorta(){
-		String [] aux = this.id.split("-");
+		String [] aux = this.ip.split("-");
         return (Integer.parseInt(aux[1]));
     }
 
