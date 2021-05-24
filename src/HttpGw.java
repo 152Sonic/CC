@@ -98,43 +98,38 @@ public class HttpGw {
             dos.writeUTF(fileout);
             dos.flush();
             s.close();
-		
 	    }
     }
 
-    public void runGW () throws UnknownHostException{
+    public void runGW () throws IOException {
+        while (true){
+            Packet p = FSChunkProtocol.receiveFromServer(ds_rececao);
         new Thread(() -> {
-            while (true){
-                Packet p = FSChunkProtocol.receiveFromServer(ds_rececao);
                 System.out.println("pacote recebido: " + p.toString());
                 try {
                     gerirPacket(p);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        }).start();
-
+            }).start();
+            Socket s = ss.accept();
         new Thread(() -> {
-            while (true) {
                 try {
-                    Socket s = ss.accept();
                     DataInputStream dis = new DataInputStream(new BufferedInputStream(s.getInputStream()));
-                    String p = dis.readLine();
-                    String[] tokens = p.split(" ");
-                    p = tokens[1].substring(1);
-                    System.out.println(p);
-                    gerirPedido(p,s);
-
+                    String pct = dis.readLine();
+                    String[] tokens = pct.split(" ");
+                    pct = tokens[1].substring(1);
+                    System.out.println(pct);
+                    gerirPedido(pct,s);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        }).start();
+            }).start();
+        }
 
     }
 
-    public static void main (String [] args) throws UnknownHostException{
+    public static void main (String [] args) throws IOException {
         HttpGw gw = new HttpGw(4200);
         gw.runGW();
     }
