@@ -48,7 +48,13 @@ public class FastFileSrv{
                 System.out.println(p.toString());
                 // gerir o pacote
                 if (p.getTipo() == 2){
-                    //pede o fivheiro
+                    String filename = charset.decode(ByteBuffer.wrap(p.getData()))
+				.toString();
+		    File file = new File("../../" + filename);
+		    byte[] fileContent = Files.readAllBytes(file.toPath());
+  		    p = new Packet(3,porta,ip,0,filecontent,0,0);
+		    DatagramPacket p1 = new DatagramPacket(p.toBytes(), p.toBytes().lenght, InetAddress.getByName(ip_destino),4200);
+		    FSChunkProtocol.sendToGw(ds_envio.p1);
                 }
                 else if (p.getTipo() == 4){
                     //ds_envio.close()
@@ -58,6 +64,7 @@ public class FastFileSrv{
             
         
     }
+	
 
     public static void main(String [] args) throws IOException{
         System.out.println(args[1]);

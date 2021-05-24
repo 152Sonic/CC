@@ -43,6 +43,7 @@ public class HttpGw {
     private List<Server> servers;
     private int porta;
     private InetAddress ip;
+    private Map<Integer,Socket> clientes;
 
     public HttpGw (int porta){
         this.porta = porta;
@@ -55,6 +56,7 @@ public class HttpGw {
             this.ds_envio = new DatagramSocket();
             this.ds_rececao = new DatagramSocket(this.porta);
             this.ss = new ServerSocket(this.porta);
+	    this.clientes = new HashMap<>();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,10 +70,11 @@ public class HttpGw {
     }
 
 
-    public void gerirPedido(String ped) throws IOException {
+    public void gerirPedido(String ped, Socket s) throws IOException {
         System.out.println("ola");
         byte[] pedido_buffer = ped.getBytes();
-        Packet pacote = new Packet(2,4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0);
+        Packet pacote = new Packet(2,clientes.size(),4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0);
+	clientes.put(clientes.size(),s);
         System.out.println(servers);
         for(Server s : servers){
             if(s.getEstado()==0) {
@@ -88,7 +91,9 @@ public class HttpGw {
     public void gerirPacket(Packet p) throws UnknownHostException{
         System.out.println("server->porta: " + p.getPorta() + ", ip: " + p.getIP());
         if (p.getTipo() == 1) addServer(p.getPorta(), p.getIP());
-        else if (p.getTipo() == 3);
+        else if (p.getTipo() == 3){
+		
+	}
     }
 
     public void runGW () throws UnknownHostException{
@@ -114,7 +119,7 @@ public class HttpGw {
                     String[] tokens = p.split(" ");
                     p = tokens[1].substring(1);
                     System.out.println(p);
-                    gerirPedido(p);
+                    gerirPedido(p,s);
 
                 } catch (IOException e) {
                     e.printStackTrace();
