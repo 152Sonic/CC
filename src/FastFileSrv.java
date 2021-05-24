@@ -54,9 +54,16 @@ public class FastFileSrv{
         DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, InetAddress.getByName(ip_destino), 4200);
         FSChunkProtocol.sendToGw(ds_envio, dp1);
 
+        new Thread(() -> {
+            while(true)
+                try {
+                    sendBeacons();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+        }).start();
         
         while(true){
-            sendBeacons();
             Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
             new Thread(() -> {
                 System.out.println("recebido");
