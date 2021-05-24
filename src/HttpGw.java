@@ -78,6 +78,7 @@ public class HttpGw {
         else if (p.getTipo() == 5){
             String ip = p.getIP();
             Server s = servers.get(ip);
+            System.out.println("beacon");
             s.setTempo((System.nanoTime()/1000000000));
         }
     }
