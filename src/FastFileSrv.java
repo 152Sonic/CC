@@ -58,7 +58,8 @@ public class FastFileSrv{
             while(true)
                 try {
                     sendBeacons();
-                } catch (IOException e) {
+                    Thread.sleep(5000);
+                } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
         }).start();
