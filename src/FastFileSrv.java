@@ -35,9 +35,17 @@ public class FastFileSrv{
         this.l = new ReentrantLock();
     }
 
+    public void sendBeacons() throws IOException{
+        String s = "";
+        byte [] msg = s.getBytes();
+        Packet beacon = new Packet(5,-1,porta,ip,0,msg,0,0);
+        DatagramPacket b1 = new DatagramPacket(beacon.toBytes(),beacon.toBytes().length, InetAddress.getByName(ip_destino),4200);
+        FSChunkProtocol.sendToGw(ds_envio, b1);
+    }
+
 
     public void runServer () throws IOException{
-        String s = "Ola ta tudo top";
+        String s = "";
         byte [] msg = s.getBytes();
         System.out.println(s);
         //estabelecer ligaçao
@@ -46,9 +54,11 @@ public class FastFileSrv{
         DatagramPacket dp1 = new DatagramPacket(p1.toBytes(), p1.toBytes().length, InetAddress.getByName(ip_destino), 4200);
         FSChunkProtocol.sendToGw(ds_envio, dp1);
 
-        new Thread(() -> {
-            while(true){
-                Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
+        
+        while(true){
+            sendBeacons();
+            Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
+            new Thread(() -> {
                 System.out.println("recebido");
                 System.out.println(p.toString());
                 // gerir o pacote
@@ -61,18 +71,19 @@ public class FastFileSrv{
                     byte[] filecontent = new byte[0];
                     try {
                         filecontent = Files.readAllBytes(file.toPath());
-                        p = new Packet(3,p.getId(),porta,ip,0,filecontent,0,0);
-                        DatagramPacket pac = new DatagramPacket(p.toBytes(), p.toBytes().length, InetAddress.getByName(ip_destino),4200);
+                        Packet pckt = new Packet(3,p.getId(),porta,ip,0,filecontent,0,0);
+                        DatagramPacket pac = new DatagramPacket(pckt.toBytes(), pckt.toBytes().length, InetAddress.getByName(ip_destino),4200);
                         FSChunkProtocol.sendToGw(ds_envio,pac);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-                else if (p.getTipo() == 4){
-                    //ds_envio.close()
-                }
-            }
-        }).start();
+                    else if (p.getTipo() == 4){
+                        //ds_envio.close()
+                    }
+            }).start();
+        }
+        
             
         
     }

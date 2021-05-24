@@ -11,7 +11,7 @@ public class HttpGw {
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
     private ServerSocket ss;
-    private List<Server> servers;
+    private Map<String,Server> servers;
     private int porta;
     private InetAddress ip;
     private Map<Integer,Socket> clientes;
@@ -27,17 +27,16 @@ public class HttpGw {
             this.ds_envio = new DatagramSocket();
             this.ds_rececao = new DatagramSocket(this.porta);
             this.ss = new ServerSocket(this.porta);
-	    this.clientes = new HashMap<>();
+	        this.clientes = new HashMap<>();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        this.servers = new ArrayList<Server>();
+        this.servers = new HashMap<>();
     }
 
     public void addServer(int porta, String ip){
         Server s = new Server(porta,ip,0);
-        servers.add(s);
+        servers.put(ip, s);
     }
 
 
@@ -47,15 +46,20 @@ public class HttpGw {
         Packet pacote = new Packet(2,clientes.size(),4200,InetAddress.getLocalHost().getHostAddress(), 0,pedido_buffer,0,0);
 	clientes.put(clientes.size(),sckt);
         System.out.println(servers);
-        for(Server s : servers) {
-            if (s.getEstado() == 0) {
-                System.out.print("vou mandar para: " + s.getInetAddress() + "   " + s.getPorta());
-                DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getInetAddress(), s.getPorta());
-                ds_envio.send(dp);
-                break;
+        for(Server s : servers.values()) {
+            if((System.nanoTime()/1000000000) - s.getTempo() >10){
+                servers.remove(s.getIp());
+            }
+            else{
+                if (s.getEstado() == 0) {
+                    System.out.print("vou mandar para: " + s.getInetAddress() + "   " + s.getPorta());
+                    DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getInetAddress(), s.getPorta());
+                    ds_envio.send(dp);
+                    break;
+                }
             }
         }
-
+            
     }
 
 
@@ -71,6 +75,11 @@ public class HttpGw {
             dos.flush();
             s.close();
 	    }
+        else if (p.getTipo() == 5){
+            String ip = p.getIP();
+            Server s = servers.get(ip);
+            s.setTempo((System.nanoTime()/1000000000));
+        }
     }
 
     public void runGW () throws IOException {
