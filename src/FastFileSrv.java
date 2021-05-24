@@ -56,7 +56,8 @@ public class FastFileSrv{
                     Charset charset = StandardCharsets.US_ASCII;
                     String filename = charset.decode(ByteBuffer.wrap(p.getData()))
 				.toString();
-		    File file = new File("../../" + filename);
+                   filename = filename.replace("\0","");
+		    File file = new File("../" + filename);
                     byte[] filecontent = new byte[0];
                     try {
                         filecontent = Files.readAllBytes(file.toPath());
