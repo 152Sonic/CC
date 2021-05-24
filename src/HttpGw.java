@@ -47,10 +47,6 @@ public class HttpGw {
 	clientes.put(clientes.size(),sckt);
         System.out.println(servers);
         for(Server s : servers.values()) {
-            if((System.nanoTime()/1000000000) - s.getTempo() >10){
-                servers.remove(s.getIp());
-            }
-            else{
                 if (s.getEstado() == 0) {
                     System.out.print("vou mandar para: " + s.getInetAddress() + "   " + s.getPorta());
                     DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getInetAddress(), s.getPorta());
@@ -59,8 +55,7 @@ public class HttpGw {
                 }
             }
         }
-            
-    }
+
 
 
     public void gerirPacket(Packet p) throws IOException {
@@ -80,10 +75,27 @@ public class HttpGw {
             Server s = servers.get(ip);
             System.out.println("beacon");
             s.setTempo((System.nanoTime()/1000000000));
+            System.out.println(s.getTempo());
         }
     }
 
     public void runGW () throws IOException {
+        new Thread(() -> {
+            while(true) {
+                try {
+                    for (Server s : servers.values()) {
+                        //if ((System.nanoTime() / 1000000000) - s.getTempo() > 10) {
+                        double x = System.nanoTime() / 1000000000.0 - s.getTempo();
+                        System.out.println(x);
+                        servers.remove(s.getIp());
+                        //  }
+                    }
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
         while (true){
             Packet p = FSChunkProtocol.receiveFromServer(ds_rececao);
         new Thread(() -> {
@@ -94,9 +106,10 @@ public class HttpGw {
                     e.printStackTrace();
                 }
             }).start();
-            Socket s = ss.accept();
+
         new Thread(() -> {
                 try {
+                    Socket s = ss.accept();
                     DataInputStream dis = new DataInputStream(new BufferedInputStream(s.getInputStream()));
                     String pct = dis.readLine();
                     String[] tokens = pct.split(" ");

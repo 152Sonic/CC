@@ -36,6 +36,7 @@ public class FastFileSrv{
     }
 
     public void sendBeacons() throws IOException{
+        System.out.println("beacon");
         String s = "";
         byte [] msg = s.getBytes();
         Packet beacon = new Packet(5,-1,porta,ip,0,msg,0,0);
@@ -45,7 +46,7 @@ public class FastFileSrv{
 
 
     public void runServer () throws IOException{
-        String s = "";
+        String s = "olá";
         byte [] msg = s.getBytes();
         System.out.println(s);
         //estabelecer ligaçao
