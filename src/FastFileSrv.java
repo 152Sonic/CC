@@ -112,16 +112,17 @@ public class FastFileSrv{
                             FSChunkProtocol.sendToGw(ds_envio, pac);
                         }
                     } catch (IOException e) {
+                        System.out.println("Não há ficheiro");
                         String c = "";
                         byte [] n = c.getBytes();
                         Packet erro = new Packet(6,p.getId(),porta,ip,0,n,0,0);
                         try {
+                            System.out.println("E aqui?");
                             DatagramPacket dpe = new DatagramPacket(erro.toBytes(),erro.toBytes().length,InetAddress.getByName(ip_destino),4200);
                             FSChunkProtocol.sendToGw(ds_envio,dpe);
                         } catch (IOException ioException) {
                             ioException.printStackTrace();
                         }
-                        e.printStackTrace();
                     }
                 }
                     else if (p.getTipo() == 4){

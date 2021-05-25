@@ -83,6 +83,7 @@ public class HttpGw {
                 dos.write(file,0,file.length);
                 dos.flush();
                 s.close();
+                System.out.println("fechei");
             }
             else{
                 List<Packet> f = frags.get(p.getId());
@@ -109,7 +110,7 @@ public class HttpGw {
                 servers.get(p.getPorta()).setEstado(0);
                 s.close();
             }
-            servers.get(p.getIP()).setEstado(0);
+            servers.get(p.getPorta()).setEstado(0);
 	    }
         else if (p.getTipo() == 3 && p.getFrag()==1) {
             if(!frags.containsKey(p.getId())){
