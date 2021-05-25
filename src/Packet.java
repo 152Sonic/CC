@@ -96,6 +96,10 @@ public class Packet implements Serializable{
         return (Integer.parseInt(aux[1]));
     }
 
+    int getOff(){
+    	return this.offset;
+	}
+
 	String getIP(){
 		String [] aux = this.ip.split("-");
         return aux[0];

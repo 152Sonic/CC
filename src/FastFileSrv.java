@@ -58,8 +58,8 @@ public class FastFileSrv{
         new Thread(() -> {
             while(true)
                 try {
-                    sendBeacons();
                     Thread.sleep(5000);
+                    sendBeacons();
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -90,7 +90,7 @@ public class FastFileSrv{
                                     System.out.println("ficheiro lido" + off);
                                     byte[]fim = new byte[(int)tam-off];
                                     System.arraycopy(filecontent,off,fim,0,(int) tam-off);
-                                    Packet pckt = new Packet(3, p.getId(), porta, ip, 0, fim, 0, 0);
+                                    Packet pckt = new Packet(3, p.getId(), porta, ip, 0, fim, 0, off);
                                     System.out.println(pckt.toString());
                                     DatagramPacket pac = new DatagramPacket(pckt.toBytes(), pckt.toBytes().length, InetAddress.getByName(ip_destino), 4200);
                                     FSChunkProtocol.sendToGw(ds_envio, pac);
@@ -98,7 +98,7 @@ public class FastFileSrv{
                                 else{
                                     System.arraycopy(filecontent,off,buff,0,996);
                                     System.out.println("ficheiro lido" + off);
-                                    Packet pckt = new Packet(3, p.getId(), porta, ip, 1, buff, 0, 0);
+                                    Packet pckt = new Packet(3, p.getId(), porta, ip, 1, buff, 0, off);
                                     DatagramPacket pac = new DatagramPacket(pckt.toBytes(), pckt.toBytes().length, InetAddress.getByName(ip_destino), 4200);
                                     FSChunkProtocol.sendToGw(ds_envio, pac);
                                 }

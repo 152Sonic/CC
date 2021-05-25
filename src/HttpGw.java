@@ -1,11 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -61,7 +57,9 @@ public class HttpGw {
                     System.out.print("vou mandar para: " + s.getInetAddress() + "   " + s.getPorta());
                     DatagramPacket dp = new DatagramPacket(pacote.toBytes(), pacote.toBytes().length, s.getInetAddress(), s.getPorta());
                     ds_envio.send(dp);
+                    wl.lock();
                     s.setEstado(1);
+                    wl.unlock();
                     break;
                 }
             }
@@ -79,29 +77,32 @@ public class HttpGw {
                 Socket s = clientes.get(p.getId());
                 servers.get(p.getIP()).setEstado(0);
                 DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
-                String fileout = new String(file, StandardCharsets.UTF_8);
-                dos.writeUTF(fileout);
+                //String fileout = new String(file, StandardCharsets.UTF_8);
+                dos.write(file,0,file.length);
                 dos.flush();
                 s.close();
             }
             else{
                 List<Packet> f = frags.get(p.getId());
+                Collections.sort(f,new SortByOff());
                 Socket s = clientes.get(p.getId());
                 DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
                 byte[] file;
                 for(Packet pcs: f){
                     //System.out.println("\n" + pcs.toString() + "\b");
                     file = pcs.getData();
-                    String fileout = new String(file, StandardCharsets.UTF_8);
-                    fim+=fileout;
+                    //String fileout = new String(file, StandardCharsets.UTF_8);
+                   // fim+=fileout;
                     //dos.writeUTF(fileout);
+                    dos.write(file,0,file.length);
                 }
-                System.out.println("Puta que pariu" + p.toString());
+                //System.out.println("Puta que pariu" + p.toString());
                 file = p.getData();
-                System.out.println(file.length);
-                String fileout = new String(file, StandardCharsets.UTF_8);
-                fim+=fileout;
-                dos.writeUTF(fim);
+                //System.out.println(file.length);
+                //String fileout = new String(file, StandardCharsets.UTF_8);
+                //fim+=fileout;
+                //dos.writeUTF(fim);
+                dos.write(file,0,file.length);
                 dos.flush();
                 s.close();
             }
@@ -122,9 +123,9 @@ public class HttpGw {
             String ip = p.getIP();
             Server s = servers.get(ip);
             long x = System.nanoTime()/1000000000;
-            //wl.lock();
+            wl.lock();
             s.setTempo(x);
-            //wl.unlock();
+            wl.unlock();
         }
     }
 
@@ -143,7 +144,9 @@ public class HttpGw {
                         }
                     }
                     for(String ip:ips){
+                        wl.lock();
                         servers.remove(ip);
+                        wl.unlock();
                     }
                     System.out.println(servers.keySet().toString());
                     Thread.sleep(10000);
