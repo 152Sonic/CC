@@ -11,7 +11,7 @@ public class HttpGw {
     private DatagramSocket ds_envio;
     private DatagramSocket ds_rececao;
     private ServerSocket ss;
-    private Map<String,Server> servers;
+    private Map<Integer,Server> servers;
     private Map<Integer,List<Packet>> frags;
     private int porta;
     private InetAddress ip;
@@ -42,7 +42,9 @@ public class HttpGw {
 
     public void addServer(int porta, String ip){
         Server s = new Server(porta,ip,0);
-        servers.put(ip, s);
+        wl.lock();
+        servers.put(porta, s);
+        wl.unlock();
     }
 
 
@@ -75,7 +77,7 @@ public class HttpGw {
             if(!frags.containsKey(p.getId())) {
                 byte[] file = p.getData();
                 Socket s = clientes.get(p.getId());
-                servers.get(p.getIP()).setEstado(0);
+                servers.get(p.getPorta()).setEstado(0);
                 DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(s.getOutputStream()));
                 //String fileout = new String(file, StandardCharsets.UTF_8);
                 dos.write(file,0,file.length);
@@ -104,6 +106,7 @@ public class HttpGw {
                 //dos.writeUTF(fim);
                 dos.write(file,0,file.length);
                 dos.flush();
+                servers.get(p.getPorta()).setEstado(0);
                 s.close();
             }
             servers.get(p.getIP()).setEstado(0);
@@ -121,7 +124,7 @@ public class HttpGw {
 
         else if (p.getTipo() == 5){
             String ip = p.getIP();
-            Server s = servers.get(ip);
+            Server s = servers.get(p.getPorta());
             long x = System.nanoTime()/1000000000;
             wl.lock();
             s.setTempo(x);
@@ -133,17 +136,17 @@ public class HttpGw {
         new Thread(() -> {
             while(true) {
                 try {
-                    List<String> ips = new ArrayList<>();
+                    List<Integer> ips = new ArrayList<>();
                     for (Server s : servers.values()) {
                         long x = System.nanoTime()/1000000000;
                         long m = s.getTempo();
                         long minus = x - m;
                         System.out.println(minus);
                         if(minus> 10){
-                            ips.add(s.getIp());
+                            ips.add(s.getPorta());
                         }
                     }
-                    for(String ip:ips){
+                    for(Integer ip:ips){
                         wl.lock();
                         servers.remove(ip);
                         wl.unlock();
