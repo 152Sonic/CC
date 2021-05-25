@@ -104,6 +104,10 @@ public class Packet implements Serializable{
 	byte[] getData(){
 	return this.data;
  	}
+
+ 	int getFrag(){
+    	return this.frag;
+	}
     
     public String toString(){
 		StringBuilder s = new StringBuilder();

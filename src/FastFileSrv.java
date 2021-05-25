@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -36,7 +37,6 @@ public class FastFileSrv{
     }
 
     public void sendBeacons() throws IOException{
-        System.out.println("beacon");
         String s = "";
         byte [] msg = s.getBytes();
         Packet beacon = new Packet(5,-1,porta,ip,0,msg,0,0);
@@ -67,6 +67,7 @@ public class FastFileSrv{
         
         while(true){
             Packet p = FSChunkProtocol.receiveFromGw(ds_rececao);
+            System.out.println(p.toString());
             new Thread(() -> {
                 System.out.println("recebido");
                 System.out.println(p.toString());
@@ -75,14 +76,41 @@ public class FastFileSrv{
                     Charset charset = StandardCharsets.US_ASCII;
                     String filename = charset.decode(ByteBuffer.wrap(p.getData()))
 				.toString();
-                   filename = filename.replace("\0","");
-		    File file = new File("../" + filename);
-                    byte[] filecontent = new byte[0];
+                    filename = filename.replace("\0","");
+                    File file = new File("../" + filename);
                     try {
-                        filecontent = Files.readAllBytes(file.toPath());
-                        Packet pckt = new Packet(3,p.getId(),porta,ip,0,filecontent,0,0);
-                        DatagramPacket pac = new DatagramPacket(pckt.toBytes(), pckt.toBytes().length, InetAddress.getByName(ip_destino),4200);
-                        FSChunkProtocol.sendToGw(ds_envio,pac);
+                        double tam = Files.size(file.toPath());
+                        System.out.println(tam);
+                        if (tam > 996){
+                            int off = 0;
+                            byte[] filecontent = Files.readAllBytes(file.toPath());
+                            byte[] buff = new byte[996];
+                            for(;off<tam;off+=996){
+                                if(off+996>tam){
+                                    System.out.println("ficheiro lido" + off);
+                                    byte[]fim = new byte[(int)tam-off];
+                                    System.arraycopy(filecontent,off,fim,0,(int) tam-off);
+                                    Packet pckt = new Packet(3, p.getId(), porta, ip, 0, fim, 0, 0);
+                                    System.out.println(pckt.toString());
+                                    DatagramPacket pac = new DatagramPacket(pckt.toBytes(), pckt.toBytes().length, InetAddress.getByName(ip_destino), 4200);
+                                    FSChunkProtocol.sendToGw(ds_envio, pac);
+                                }
+                                else{
+                                    System.arraycopy(filecontent,off,buff,0,996);
+                                    System.out.println("ficheiro lido" + off);
+                                    Packet pckt = new Packet(3, p.getId(), porta, ip, 1, buff, 0, 0);
+                                    DatagramPacket pac = new DatagramPacket(pckt.toBytes(), pckt.toBytes().length, InetAddress.getByName(ip_destino), 4200);
+                                    FSChunkProtocol.sendToGw(ds_envio, pac);
+                                }
+                            }
+
+                        }
+                        else {
+                            byte[] filecontent = Files.readAllBytes(file.toPath());
+                            Packet pckt = new Packet(3, p.getId(), porta, ip, 0, filecontent, 0, 0);
+                            DatagramPacket pac = new DatagramPacket(pckt.toBytes(), pckt.toBytes().length, InetAddress.getByName(ip_destino), 4200);
+                            FSChunkProtocol.sendToGw(ds_envio, pac);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

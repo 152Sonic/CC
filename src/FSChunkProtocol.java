@@ -23,15 +23,13 @@ public class FSChunkProtocol{
     public static Packet receiveFromServer(DatagramSocket ds){
         byte [] buf = new byte [1024];
         DatagramPacket p = new DatagramPacket(buf, buf.length);
-        try {
-            ds.receive(p);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         Packet pckt = null;
         try {
-            pckt = new Packet(buf);
-        } catch (UnknownHostException e) {
+            ds.receive(p);
+            byte[] aux = new byte[p.getLength()];
+            System.arraycopy(buf,0,aux,0,p.getLength());
+            pckt = new Packet(aux);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         //System.out.println("Ds-porta: " + ds.getPort());
