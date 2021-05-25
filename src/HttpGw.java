@@ -130,6 +130,15 @@ public class HttpGw {
             s.setTempo(x);
             wl.unlock();
         }
+
+        else if (p.getTipo() == 6){
+            Socket s = clientes.get(p.getId());
+            PrintWriter out = new PrintWriter(s.getOutputStream());
+            out.println("Ficheiro não existe!");
+            out.flush();
+            servers.get(p.getPorta()).setEstado(0);
+            s.close();
+        }
     }
 
     public void runGW () throws IOException {

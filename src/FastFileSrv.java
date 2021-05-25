@@ -77,8 +77,8 @@ public class FastFileSrv{
                     String filename = charset.decode(ByteBuffer.wrap(p.getData()))
 				.toString();
                     filename = filename.replace("\0","");
-                    File file = new File("../" + filename);
                     try {
+                        File file = new File("../" + filename);
                         double tam = Files.size(file.toPath());
                         System.out.println(tam);
                         if (tam > 996){
@@ -112,6 +112,15 @@ public class FastFileSrv{
                             FSChunkProtocol.sendToGw(ds_envio, pac);
                         }
                     } catch (IOException e) {
+                        String c = "";
+                        byte [] n = c.getBytes();
+                        Packet erro = new Packet(6,p.getId(),porta,ip,0,n,0,0);
+                        try {
+                            DatagramPacket dpe = new DatagramPacket(erro.toBytes(),erro.toBytes().length,InetAddress.getByName(ip_destino),4200);
+                            FSChunkProtocol.sendToGw(ds_envio,dpe);
+                        } catch (IOException ioException) {
+                            ioException.printStackTrace();
+                        }
                         e.printStackTrace();
                     }
                 }
